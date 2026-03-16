@@ -1,6 +1,7 @@
 package ru.gentleman.order.dto;
 
 import ru.gentleman.common.dto.OrderStatus;
+import ru.gentleman.common.dto.OrderType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -12,7 +13,7 @@ public record OrderDto(
         String title,
         String currency,
         BigDecimal totalAmount,
-        OrderType orderType,
+        OrderType type,
         OrderStatus orderStatus,
         Instant createdAt,
         Instant updatedAt
