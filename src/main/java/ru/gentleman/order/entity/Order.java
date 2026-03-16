@@ -22,6 +22,8 @@ public class Order {
     @Id
     private UUID id;
 
+    private UUID userId;
+
     private String title;
 
     private String currency;

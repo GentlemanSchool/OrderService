@@ -9,6 +9,7 @@ import java.util.UUID;
 
 public record OrderDto(
         UUID id,
+        UUID userId,
         String title,
         String currency,
         BigDecimal totalAmount,
