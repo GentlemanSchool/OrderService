@@ -1,0 +1,58 @@
+spring:
+  application:
+   name: Gentleman - QuizService
+  config:
+    activate:
+      on-profile: prod
+  cache:
+    type: redis
+    cache-names: redis-cache
+  jpa:
+    database-platform: ru.gentleman.user.config.AxonPostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quiz
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    url: jdbc:postgresql://localhost:5432/quiz
+    user: postgres
+    password: password
+    baseline-on-migrate: true
+  messages:
+    basename: messages
+    encoding: UTF-8
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+server:
+  port: 8080
+
+redisson:
+  host: 127.0.0.1
+  port: 6379
+  username: default
+  password: password
+
+otel:
+  service:
+    name: "quiz-service"
+  traces:
+    exporter: "otlp"
+    sampler: "always_on"
+  metrics:
+    exporter: "otlp"
+    export:
+      interval: 5000
+  logs:
+    exporter: "otlp"
+  exporter:
+    otlp:
+      protocol: "grpc"
+      endpoint: "http://localhost:4317"

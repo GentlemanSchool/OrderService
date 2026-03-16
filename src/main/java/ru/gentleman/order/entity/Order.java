@@ -5,6 +5,7 @@ import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import ru.gentleman.common.dto.OrderStatus;
+import ru.gentleman.common.dto.OrderType;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -31,7 +32,7 @@ public class Order {
     private BigDecimal totalAmount;
 
     @Enumerated(EnumType.STRING)
-    private OrderType orderType;
+    private OrderType type;
 
     @Enumerated(EnumType.STRING)
     private OrderStatus status;

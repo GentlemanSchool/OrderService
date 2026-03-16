@@ -1,0 +1,81 @@
+spring:
+  application:
+   name: Gentleman - QuizService
+  profiles:
+    active: dev
+  config:
+    import: application-prod.yml
+  cache:
+    type: redis
+    cache-names: redis-cache
+  jpa:
+    database-platform: ru.gentleman.quiz.config.AxonPostgreSQLDialect
+    hibernate:
+      ddl-auto: validate
+    show-sql: false
+    open-in-view: false
+  datasource:
+    url: jdbc:postgresql://localhost:5432/quiz
+    username: postgres
+    password: password
+    driver-class-name: org.postgresql.Driver
+  flyway:
+    url: jdbc:postgresql://localhost:5432/quiz
+    user: postgres
+    password: password
+    baseline-on-migrate: true
+    locations: classpath:db/migration,classpath:others/path
+    baseline-version: 0
+  messages:
+    basename: messages
+    encoding: UTF-8
+
+  security:
+    oauth2:
+      resourceserver:
+        jwt:
+          jwk-set-uri: http://localhost:9000/oauth2/jwks
+server:
+  port: 8080
+
+url:
+  callback: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
+  successUrl: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
+  cancelUrl:  https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
+
+redisson:
+  host: 127.0.0.1
+  port: 6379
+  username: default
+  password: password
+
+axon:
+  eventhandling:
+    processors:
+      quiz-group:
+        mode: pooled
+      question-group:
+        mode: pooled
+      quiz-attempt-group:
+        mode: pooled
+      user-answer-group:
+        mode: pooled
+  serializer:
+    general: jackson
+    events: jackson
+    messages: jackson
+  axonserver:
+    servers: localhost:8124
+  update-check:
+    disabled: true
+
+otel:
+  sdk:
+    disabled: true
+
+springdoc:
+  swagger-ui:
+    use-root-path: true
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
