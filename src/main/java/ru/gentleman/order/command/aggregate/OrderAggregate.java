@@ -11,9 +11,11 @@ import ru.gentleman.common.dto.OrderStatus;
 import ru.gentleman.common.dto.OrderType;
 import ru.gentleman.common.event.OrderCompletedEvent;
 import ru.gentleman.common.event.OrderCreatedEvent;
+import ru.gentleman.common.event.OrderDeletedEvent;
 import ru.gentleman.common.event.RollbackCreateOrderEvent;
 import ru.gentleman.order.command.CompleteOrderCommand;
 import ru.gentleman.order.command.CreateOrderCommand;
+import ru.gentleman.order.command.DeleteOrderCommand;
 import ru.gentleman.order.command.RollbackCreateOrderCommand;
 
 import java.math.BigDecimal;
@@ -21,7 +23,7 @@ import java.time.Instant;
 import java.util.UUID;
 
 @Slf4j
-@Aggregate
+@Aggregate()
 @SuppressWarnings({"unused", "FieldCanBeLocal"})
 public class OrderAggregate {
 
@@ -43,6 +45,8 @@ public class OrderAggregate {
     private Instant createdAt;
 
     private Instant updatedAt;
+
+    private Boolean isActive;
 
     public OrderAggregate() {
 
@@ -76,10 +80,13 @@ public class OrderAggregate {
         this.status = event.status();
         this.createdAt = event.createdAt();
         this.updatedAt = event.updatedAt();
+        this.isActive = true;
     }
 
     @CommandHandler
     public void handle(RollbackCreateOrderCommand command) {
+        isOrderActive();
+
         if(status == OrderStatus.FAILED) {
             throw new CommandExecutionException(
                     "error.order.already_failed",
@@ -100,6 +107,8 @@ public class OrderAggregate {
 
     @CommandHandler
     public void handle(CompleteOrderCommand command) {
+        isOrderActive();
+
         if(status == OrderStatus.FAILED || status == OrderStatus.SUCCESSFUL
         || status == OrderStatus.EXPIRED) {
             throw new CommandExecutionException(
@@ -118,5 +127,29 @@ public class OrderAggregate {
     @EventHandler
     public void on(OrderCompletedEvent event) {
         this.status = event.cryptoPaymentStatus().toOrderStatus();
+    }
+
+    @CommandHandler
+    public void handle(DeleteOrderCommand command) {
+        isOrderActive();
+
+        OrderDeletedEvent event = new OrderDeletedEvent(command.id());
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventHandler
+    public void on(OrderDeletedEvent event) {
+        this.isActive = false;
+    }
+
+    private void isOrderActive() {
+        if(!this.isActive) {
+            throw new CommandExecutionException(
+                    "error.order.deleted",
+                    null,
+                    id
+            );
+        }
     }
 }

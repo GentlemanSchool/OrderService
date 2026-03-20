@@ -12,6 +12,7 @@ import java.util.List;
 
 @Component
 @RequiredArgsConstructor
+@SuppressWarnings({"unused"})
 public class OrderHandler {
 
     private final OrderService orderService;

@@ -1,16 +1,15 @@
 package ru.gentleman.order.command.controller;
 
-import io.swagger.v3.oas.annotations.parameters.RequestBody;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.springframework.context.MessageSource;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+import ru.gentleman.common.dto.OrderStatus;
 import ru.gentleman.order.command.CreateOrderCommand;
+import ru.gentleman.order.command.DeleteOrderCommand;
 import ru.gentleman.order.dto.OrderDto;
 
 import java.net.URI;
@@ -37,7 +36,7 @@ public class OrderCommandController {
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .currency(orderDto.currency())
-                .status(orderDto.status())
+                .status(OrderStatus.CREATED)
                 .title(orderDto.title())
                 .totalAmount(orderDto.totalAmount())
                 .type(orderDto.type())
@@ -50,10 +49,19 @@ public class OrderCommandController {
                 .created(URI.create("/api/v1/orders/" + id))
                 .body(
                         this.messageSource.getMessage(
-                                "",
+                                "info.order.created",
                                 new Object[]{id},
                                 Locale.getDefault()
                         )
                 );
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> delete(@PathVariable("id") UUID id) {
+        DeleteOrderCommand command = new DeleteOrderCommand(id);
+
+        this.commandGateway.sendAndWait(command);
+
+        return ResponseEntity.noContent().build();
     }
 }

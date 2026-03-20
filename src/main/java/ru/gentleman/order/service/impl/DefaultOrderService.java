@@ -5,6 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import ru.gentleman.common.dto.OrderStatus;
 import ru.gentleman.common.util.ExceptionUtils;
 import ru.gentleman.order.cache.CacheClear;
@@ -19,6 +20,7 @@ import java.util.UUID;
 
 @Slf4j
 @Service
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 public class DefaultOrderService implements OrderService {
 
@@ -33,8 +35,8 @@ public class DefaultOrderService implements OrderService {
     public OrderDto get(UUID id) {
         log.info("get {}", id);
 
-        Order order = this.orderRepository.findById(id)
-                .orElseThrow(() -> ExceptionUtils.notFound("error.order.not_found", id));
+        Order order = this.orderRepository.findByIdAndIsActive(id, true)
+                .orElse(null);
 
         return this.orderMapper.toDto(order);
     }
@@ -45,29 +47,46 @@ public class DefaultOrderService implements OrderService {
         log.info("getAllByUserId {}", userId);
 
         return this.orderMapper.toDto(
-                this.orderRepository.findAllByUserId(userId)
+                this.orderRepository.findAllByUserIdAndIsActive(userId, true)
         );
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = "allOrdersByUserId", key = "#orderDto.userId()")
     public void create(OrderDto orderDto) {
         log.info("create {}", orderDto);
 
-        this.orderRepository.save(
-                this.orderMapper.toEntity(orderDto)
-        );
+        Order mappedOrder = this.orderMapper.toEntity(orderDto);
+        mappedOrder.setIsActive(true);
+
+        this.orderRepository.save(mappedOrder);
     }
 
     @Override
+    @Transactional
     @CacheEvict(value = "order", key = "#id")
     public void updateStatus(UUID id, OrderStatus orderStatus) {
         log.info("updateStatus {} {}", id, orderStatus);
 
-        Order order = this.orderRepository.findById(id)
+        Order order = this.orderRepository.findByIdAndIsActive(id, true)
                 .orElseThrow(() -> ExceptionUtils.notFound("error.order.not_found", id));
 
         order.setStatus(orderStatus);
+
+        this.cacheClear.clearAllOrdersByUserId(order.getUserId());
+    }
+
+    @Override
+    @Transactional
+    @CacheEvict(value = "order", key = "#id")
+    public void delete(UUID id) {
+        log.info("delete {}", id);
+
+        Order order = this.orderRepository.findByIdAndIsActive(id, true)
+                .orElseThrow(() -> ExceptionUtils.notFound("error.order.not_found", id));
+
+        order.setIsActive(false);
 
         this.cacheClear.clearAllOrdersByUserId(order.getUserId());
     }

@@ -2,18 +2,22 @@ package ru.gentleman.order.query.projection;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import ru.gentleman.common.dto.OrderStatus;
 import ru.gentleman.common.event.OrderCompletedEvent;
 import ru.gentleman.common.event.OrderCreatedEvent;
+import ru.gentleman.common.event.OrderDeletedEvent;
 import ru.gentleman.common.event.RollbackCreateOrderEvent;
 import ru.gentleman.order.dto.OrderDto;
 import ru.gentleman.order.service.OrderService;
 
 @Slf4j
 @Component
+@ProcessingGroup("order-group")
 @RequiredArgsConstructor
+@SuppressWarnings({"unused"})
 public class OrderProjection {
 
     private final OrderService orderService;
@@ -43,5 +47,10 @@ public class OrderProjection {
     @EventHandler
     public void on(OrderCompletedEvent event) {
         this.orderService.updateStatus(event.id(), event.cryptoPaymentStatus().toOrderStatus());
+    }
+
+    @EventHandler
+    public void on(OrderDeletedEvent event) {
+        this.orderService.delete(event.id());
     }
 }

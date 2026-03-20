@@ -42,4 +42,6 @@ public class Order {
 
     @UpdateTimestamp
     private Instant updatedAt;
+
+    private Boolean isActive;
 }

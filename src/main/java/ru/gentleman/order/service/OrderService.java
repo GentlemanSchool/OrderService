@@ -15,4 +15,6 @@ public interface OrderService {
     void create(OrderDto orderDto);
 
     void updateStatus(UUID id, OrderStatus orderStatus);
+
+    void delete(UUID id);
 }

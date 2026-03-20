@@ -34,7 +34,7 @@ public class RedissonConfig {
         Config config = new Config();
 
         config.useSingleServer()
-                .setAddress("redis://%status:%d".formatted(this.host, this.port))
+                .setAddress("redis://%s:%d".formatted(this.host, this.port))
                 .setDatabase(0)
                 .setUsername(this.username)
                 .setPassword(this.password);

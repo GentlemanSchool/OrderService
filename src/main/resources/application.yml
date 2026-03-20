@@ -9,18 +9,18 @@ spring:
     type: redis
     cache-names: redis-cache
   jpa:
-    database-platform: ru.gentleman.quiz.config.AxonPostgreSQLDialect
+    database-platform: ru.gentleman.order.config.AxonPostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: false
     open-in-view: false
   datasource:
-    url: jdbc:postgresql://localhost:5432/quiz
+    url: jdbc:postgresql://localhost:5437/order
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
   flyway:
-    url: jdbc:postgresql://localhost:5432/quiz
+    url: jdbc:postgresql://localhost:5437/order
     user: postgres
     password: password
     baseline-on-migrate: true
@@ -29,14 +29,13 @@ spring:
   messages:
     basename: messages
     encoding: UTF-8
-
   security:
     oauth2:
       resourceserver:
         jwt:
           jwk-set-uri: http://localhost:9000/oauth2/jwks
 server:
-  port: 8080
+  port: 3030
 
 url:
   callback: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
@@ -52,13 +51,7 @@ redisson:
 axon:
   eventhandling:
     processors:
-      quiz-group:
-        mode: pooled
-      question-group:
-        mode: pooled
-      quiz-attempt-group:
-        mode: pooled
-      user-answer-group:
+      order-group:
         mode: pooled
   serializer:
     general: jackson
@@ -66,6 +59,7 @@ axon:
     messages: jackson
   axonserver:
     servers: localhost:8124
+    component-name: order-service
   update-check:
     disabled: true
 
