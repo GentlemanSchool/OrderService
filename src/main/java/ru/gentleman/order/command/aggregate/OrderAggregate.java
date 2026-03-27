@@ -1,0 +1,180 @@
+package ru.gentleman.order.command.aggregate;
+
+import lombok.extern.slf4j.Slf4j;
+import org.axonframework.commandhandling.CommandExecutionException;
+import org.axonframework.commandhandling.CommandHandler;
+import org.axonframework.eventsourcing.EventSourcingHandler;
+import org.axonframework.modelling.command.AggregateIdentifier;
+import org.axonframework.modelling.command.AggregateLifecycle;
+import org.axonframework.spring.stereotype.Aggregate;
+import ru.gentleman.common.command.RejectOrderCommand;
+import ru.gentleman.common.dto.OrderStatus;
+import ru.gentleman.common.dto.OrderType;
+import ru.gentleman.common.event.*;
+import ru.gentleman.order.command.CompleteOrderCommand;
+import ru.gentleman.order.command.CreateOrderCommand;
+import ru.gentleman.order.command.DeleteOrderCommand;
+import ru.gentleman.order.command.RollbackCreateOrderCommand;
+
+import java.math.BigDecimal;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.UUID;
+
+@Slf4j
+@Aggregate()
+@SuppressWarnings({"unused", "FieldCanBeLocal"})
+public class OrderAggregate {
+
+    @AggregateIdentifier
+    private UUID id;
+
+    private UUID userId;
+
+    private UUID courseId;
+
+    private Integer days;
+
+    private String title;
+
+    private String currency;
+
+    private BigDecimal totalAmount;
+
+    private OrderType type;
+
+    private OrderStatus status;
+
+    private Instant createdAt;
+
+    private Instant updatedAt;
+
+    private Boolean isActive;
+
+    private List<String> errorMessage;
+
+    public OrderAggregate() {
+
+    }
+
+    @CommandHandler
+    public OrderAggregate(CreateOrderCommand command) {
+        OrderCreatedEvent event = OrderCreatedEvent.builder()
+                .id(command.id())
+                .createdAt(command.createdAt())
+                .currency(command.currency())
+                .status(command.status())
+                .title(command.title())
+                .totalAmount(command.totalAmount())
+                .type(command.type())
+                .updatedAt(command.updatedAt())
+                .userId(command.userId())
+                .courseId(command.courseId())
+                .subscriptionPeriodDays(command.subscriptionPeriodDays())
+                .build();
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderCreatedEvent event) {
+        this.id = event.id();
+        this.userId = event.userId();
+        this.courseId = event.courseId();
+        this.days = event.subscriptionPeriodDays();
+        this.title = event.title();
+        this.currency = event.currency();
+        this.totalAmount = event.totalAmount();
+        this.type = event.type();
+        this.status = event.status();
+        this.createdAt = event.createdAt();
+        this.updatedAt = event.updatedAt();
+        this.isActive = true;
+    }
+
+    @CommandHandler
+    public void handle(RollbackCreateOrderCommand command) {
+        isOrderActive();
+
+        if(status == OrderStatus.FAILED) {
+            throw new CommandExecutionException(
+                    "error.order.already_failed",
+                    null,
+                    command.id()
+            );
+        }
+
+        RollbackCreateOrderEvent event = new RollbackCreateOrderEvent(id);
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(RollbackCreateOrderEvent event) {
+        this.status = OrderStatus.FAILED;
+    }
+
+    @CommandHandler
+    public void handle(CompleteOrderCommand command) {
+        isOrderActive();
+
+        if(status == OrderStatus.FAILED || status == OrderStatus.SUCCESSFUL
+        || status == OrderStatus.EXPIRED) {
+            throw new CommandExecutionException(
+                    "error.order.already_completed",
+                    null,
+                    command.id()
+            );
+        }
+
+        OrderCompletedEvent event = new OrderCompletedEvent(command.id(),
+                command.cryptoPaymentStatus());
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderCompletedEvent event) {
+        this.status = event.cryptoPaymentStatus().toOrderStatus();
+    }
+
+    @CommandHandler
+    public void handle(DeleteOrderCommand command) {
+        isOrderActive();
+
+        OrderDeletedEvent event = new OrderDeletedEvent(command.id());
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderDeletedEvent event) {
+        this.isActive = false;
+    }
+
+    @CommandHandler
+    public void handle(RejectOrderCommand command) {
+        OrderRejectedEvent event =
+                new OrderRejectedEvent(command.id(),command.errorMessage());
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderRejectedEvent event) {
+        this.status = OrderStatus.FAILED;
+        this.errorMessage = new ArrayList<>();
+        this.errorMessage.add(event.errorMessage());
+    }
+
+    private void isOrderActive() {
+        if(!this.isActive) {
+            throw new CommandExecutionException(
+                    "error.order.deleted",
+                    null,
+                    id
+            );
+        }
+    }
+}
