@@ -1,28 +1,31 @@
 spring:
   application:
-   name: Gentleman - QuizService
+    name: Gentleman - QuizService
+  profiles:
+    active: dev
   config:
-    activate:
-      on-profile: prod
+    import: application-prod.yml
   cache:
     type: redis
     cache-names: redis-cache
   jpa:
-    database-platform: ru.gentleman.user.config.AxonPostgreSQLDialect
+    database-platform: ru.gentleman.order.config.AxonPostgreSQLDialect
     hibernate:
       ddl-auto: validate
     show-sql: false
     open-in-view: false
   datasource:
-    url: jdbc:postgresql://localhost:5432/quiz
+    url: jdbc:postgresql://localhost:5437/order
     username: postgres
     password: password
     driver-class-name: org.postgresql.Driver
   flyway:
-    url: jdbc:postgresql://localhost:5432/quiz
+    url: jdbc:postgresql://localhost:5437/order
     user: postgres
     password: password
     baseline-on-migrate: true
+    locations: classpath:db/migration,classpath:others/path
+    baseline-version: 0
   messages:
     basename: messages
     encoding: UTF-8
@@ -32,7 +35,12 @@ spring:
         jwt:
           jwk-set-uri: http://localhost:9000/oauth2/jwks
 server:
-  port: 8080
+  port: 3030
+
+url:
+  callback: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
+  successUrl: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
+  cancelUrl:  https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
 
 redisson:
   host: 127.0.0.1
@@ -42,7 +50,7 @@ redisson:
 
 otel:
   service:
-    name: "quiz-service"
+    name: "order-service"
   traces:
     exporter: "otlp"
     sampler: "always_on"

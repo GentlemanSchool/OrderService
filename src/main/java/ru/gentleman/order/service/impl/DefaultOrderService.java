@@ -90,4 +90,11 @@ public class DefaultOrderService implements OrderService {
 
         this.cacheClear.clearAllOrdersByUserId(order.getUserId());
     }
+
+    @Override
+    public boolean existsById(UUID id) {
+        log.info("existsById {}", id);
+
+        return this.orderRepository.existsById(id);
+    }
 }

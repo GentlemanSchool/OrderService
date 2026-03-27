@@ -1,9 +1,12 @@
 package ru.gentleman.order.config;
 
+import org.axonframework.commandhandling.gateway.CommandGateway;
 import org.axonframework.config.EventProcessingConfigurer;
 import org.axonframework.eventhandling.PropagatingErrorHandler;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Configuration;
+import ru.gentleman.order.command.interseptor.OrderInterceptor;
 
 @Configuration
 public class AxonConfig {
@@ -14,9 +17,8 @@ public class AxonConfig {
                 conf -> PropagatingErrorHandler.instance());
     }
 
-//    @Autowired
-//    public void registerCustomerCommandInterceptor(ApplicationContext context, CommandGateway commandGateway) {
-//        commandGateway.registerDispatchInterceptor(context.getBean(QuizAggregateInterceptor.class));
-//        commandGateway.registerDispatchInterceptor(context.getBean(QuizAttemptAggregateInterceptor.class));
-//    }
+    @Autowired
+    public void registerCustomerCommandInterceptor(ApplicationContext context, CommandGateway commandGateway) {
+        commandGateway.registerDispatchInterceptor(context.getBean(OrderInterceptor.class));
+    }
 }

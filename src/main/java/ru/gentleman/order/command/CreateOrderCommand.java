@@ -14,6 +14,8 @@ public record CreateOrderCommand(
         @TargetAggregateIdentifier
         UUID id,
         UUID userId,
+        UUID courseId,
+        Integer subscriptionPeriodDays,
         String title,
         String currency,
         BigDecimal totalAmount,

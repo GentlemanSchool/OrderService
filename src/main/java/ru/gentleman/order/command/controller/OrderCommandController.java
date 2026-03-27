@@ -36,6 +36,8 @@ public class OrderCommandController {
                 .createdAt(Instant.now())
                 .updatedAt(Instant.now())
                 .currency(orderDto.currency())
+                .subscriptionPeriodDays(orderDto.days())
+                .courseId(orderDto.courseId())
                 .status(OrderStatus.CREATED)
                 .title(orderDto.title())
                 .totalAmount(orderDto.totalAmount())

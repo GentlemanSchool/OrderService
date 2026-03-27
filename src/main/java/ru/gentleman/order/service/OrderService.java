@@ -17,4 +17,6 @@ public interface OrderService {
     void updateStatus(UUID id, OrderStatus orderStatus);
 
     void delete(UUID id);
+
+    boolean existsById(UUID id);
 }

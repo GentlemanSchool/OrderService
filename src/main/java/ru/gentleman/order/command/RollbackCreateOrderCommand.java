@@ -6,6 +6,7 @@ import java.util.UUID;
 
 public record RollbackCreateOrderCommand(
         @TargetAggregateIdentifier
-        UUID id
+        UUID id,
+        String errorMessage
 ) {
 }

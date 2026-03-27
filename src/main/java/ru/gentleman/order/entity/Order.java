@@ -31,6 +31,10 @@ public class Order {
 
     private BigDecimal totalAmount;
 
+    private Integer days;
+
+    private UUID courseId;
+
     @Enumerated(EnumType.STRING)
     private OrderType type;
 

@@ -6,10 +6,7 @@ import org.axonframework.config.ProcessingGroup;
 import org.axonframework.eventhandling.EventHandler;
 import org.springframework.stereotype.Component;
 import ru.gentleman.common.dto.OrderStatus;
-import ru.gentleman.common.event.OrderCompletedEvent;
-import ru.gentleman.common.event.OrderCreatedEvent;
-import ru.gentleman.common.event.OrderDeletedEvent;
-import ru.gentleman.common.event.RollbackCreateOrderEvent;
+import ru.gentleman.common.event.*;
 import ru.gentleman.order.dto.OrderDto;
 import ru.gentleman.order.service.OrderService;
 
@@ -28,6 +25,8 @@ public class OrderProjection {
                 .id(event.id())
                 .createdAt(event.createdAt())
                 .currency(event.currency())
+                .days(event.subscriptionPeriodDays())
+                .courseId(event.courseId())
                 .status(event.status())
                 .title(event.title())
                 .totalAmount(event.totalAmount())
@@ -52,5 +51,10 @@ public class OrderProjection {
     @EventHandler
     public void on(OrderDeletedEvent event) {
         this.orderService.delete(event.id());
+    }
+
+    @EventHandler
+    public void on(OrderRejectedEvent event) {
+        this.orderService.updateStatus(event.id(), OrderStatus.FAILED);
     }
 }

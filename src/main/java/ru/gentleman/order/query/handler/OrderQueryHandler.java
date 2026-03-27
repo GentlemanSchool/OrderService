@@ -13,7 +13,7 @@ import java.util.List;
 @Component
 @RequiredArgsConstructor
 @SuppressWarnings({"unused"})
-public class OrderHandler {
+public class OrderQueryHandler {
 
     private final OrderService orderService;
 

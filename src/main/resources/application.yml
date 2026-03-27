@@ -40,7 +40,7 @@ server:
 url:
   callback: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
   successUrl: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
-  cancelUrl:  https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
+  cancelUrl: https://commonsensible-transthalamic-jannet.ngrok-free.dev/api/v1/crypto-payments/webhook
 
 redisson:
   host: 127.0.0.1

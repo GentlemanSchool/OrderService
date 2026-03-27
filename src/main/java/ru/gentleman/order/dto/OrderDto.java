@@ -12,12 +12,14 @@ import java.util.UUID;
 public record OrderDto(
         UUID id,
         UUID userId,
+        UUID courseId,
         String title,
         String currency,
         BigDecimal totalAmount,
         OrderType type,
         OrderStatus status,
         Instant createdAt,
-        Instant updatedAt
+        Instant updatedAt,
+        Integer days
 ) {
 }

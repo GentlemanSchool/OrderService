@@ -3,16 +3,14 @@ package ru.gentleman.order.command.aggregate;
 import lombok.extern.slf4j.Slf4j;
 import org.axonframework.commandhandling.CommandExecutionException;
 import org.axonframework.commandhandling.CommandHandler;
-import org.axonframework.eventhandling.EventHandler;
+import org.axonframework.eventsourcing.EventSourcingHandler;
 import org.axonframework.modelling.command.AggregateIdentifier;
 import org.axonframework.modelling.command.AggregateLifecycle;
 import org.axonframework.spring.stereotype.Aggregate;
+import ru.gentleman.common.command.RejectOrderCommand;
 import ru.gentleman.common.dto.OrderStatus;
 import ru.gentleman.common.dto.OrderType;
-import ru.gentleman.common.event.OrderCompletedEvent;
-import ru.gentleman.common.event.OrderCreatedEvent;
-import ru.gentleman.common.event.OrderDeletedEvent;
-import ru.gentleman.common.event.RollbackCreateOrderEvent;
+import ru.gentleman.common.event.*;
 import ru.gentleman.order.command.CompleteOrderCommand;
 import ru.gentleman.order.command.CreateOrderCommand;
 import ru.gentleman.order.command.DeleteOrderCommand;
@@ -20,6 +18,8 @@ import ru.gentleman.order.command.RollbackCreateOrderCommand;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.UUID;
 
 @Slf4j
@@ -31,6 +31,10 @@ public class OrderAggregate {
     private UUID id;
 
     private UUID userId;
+
+    private UUID courseId;
+
+    private Integer days;
 
     private String title;
 
@@ -48,6 +52,8 @@ public class OrderAggregate {
 
     private Boolean isActive;
 
+    private List<String> errorMessage;
+
     public OrderAggregate() {
 
     }
@@ -64,15 +70,19 @@ public class OrderAggregate {
                 .type(command.type())
                 .updatedAt(command.updatedAt())
                 .userId(command.userId())
+                .courseId(command.courseId())
+                .subscriptionPeriodDays(command.subscriptionPeriodDays())
                 .build();
 
         AggregateLifecycle.apply(event);
     }
 
-    @EventHandler
+    @EventSourcingHandler
     public void on(OrderCreatedEvent event) {
         this.id = event.id();
         this.userId = event.userId();
+        this.courseId = event.courseId();
+        this.days = event.subscriptionPeriodDays();
         this.title = event.title();
         this.currency = event.currency();
         this.totalAmount = event.totalAmount();
@@ -100,7 +110,7 @@ public class OrderAggregate {
         AggregateLifecycle.apply(event);
     }
 
-    @EventHandler
+    @EventSourcingHandler
     public void on(RollbackCreateOrderEvent event) {
         this.status = OrderStatus.FAILED;
     }
@@ -124,7 +134,7 @@ public class OrderAggregate {
         AggregateLifecycle.apply(event);
     }
 
-    @EventHandler
+    @EventSourcingHandler
     public void on(OrderCompletedEvent event) {
         this.status = event.cryptoPaymentStatus().toOrderStatus();
     }
@@ -138,9 +148,24 @@ public class OrderAggregate {
         AggregateLifecycle.apply(event);
     }
 
-    @EventHandler
+    @EventSourcingHandler
     public void on(OrderDeletedEvent event) {
         this.isActive = false;
+    }
+
+    @CommandHandler
+    public void handle(RejectOrderCommand command) {
+        OrderRejectedEvent event =
+                new OrderRejectedEvent(command.id(),command.errorMessage());
+
+        AggregateLifecycle.apply(event);
+    }
+
+    @EventSourcingHandler
+    public void on(OrderRejectedEvent event) {
+        this.status = OrderStatus.FAILED;
+        this.errorMessage = new ArrayList<>();
+        this.errorMessage.add(event.errorMessage());
     }
 
     private void isOrderActive() {
